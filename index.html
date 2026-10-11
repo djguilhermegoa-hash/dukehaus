@@ -214,6 +214,7 @@
     .spotlight-header>p{max-width:310px;color:#b0aeb9;font-size:13px;line-height:1.8;margin:0 0 5px}
     .spotlight-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;align-items:stretch}
     .spotlight-card{min-width:0;display:grid;grid-template-columns:46% 54%;min-height:415px;border:1px solid #414046;background:#151319;overflow:hidden;transition:border-color .2s,transform .2s}
+    .spotlight-card.only-right{grid-column:2}
     .spotlight-card:hover{border-color:var(--spot-accent);transform:translateY(-3px)}
     .spotlight-visual{min-width:0;min-height:415px;position:relative;display:flex;align-items:center;justify-content:center;background:var(--spot-bg)}
     .spotlight-visual img{position:relative;z-index:1;width:100%;height:100%;max-height:415px;object-fit:contain}
@@ -241,6 +242,7 @@
     }
     @media(max-width:900px){
       .spotlight-card{display:flex;flex-direction:column;min-height:0}
+      .spotlight-card.only-right{grid-column:auto}
       .spotlight-visual{min-height:0;aspect-ratio:3/4}
       .spotlight-visual img{max-height:none;height:100%;width:100%;object-fit:contain;position:absolute;inset:0}
       .spotlight-content{flex:1;padding:25px 20px}
@@ -532,7 +534,8 @@
         introEl.textContent = 'A próxima festa já tem data. Escolha sua noite e garanta seu ingresso antecipado.';
       }
       const eveFlag = isRecreio ? '<div class="eve-flag">✳ VÉSPERA DE FERIADO · 11 OUT</div>' : '';
-      spotlightGrid.innerHTML = `<article class="spotlight-card" style="--spot-accent:${event.color};--spot-bg:${event.background}">
+      const rightSideClass = (isToday || happeningNow) ? ' only-right' : '';
+      spotlightGrid.innerHTML = `<article class="spotlight-card${rightSideClass}" style="--spot-accent:${event.color};--spot-bg:${event.background}">
         <div class="spotlight-visual">
           <div class="spotlight-visual-fallback"><strong>${event.posterTitle}</strong></div>
           ${event.image ? `<img src="${event.image}" alt="Flyer oficial de ${event.title}" fetchpriority="high" onerror="this.remove()">` : ''}
