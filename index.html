@@ -673,8 +673,11 @@
 
     const spotlightGrid = document.getElementById('spotlightGrid');
     const localDateBR = new Intl.DateTimeFormat('sv-SE', {timeZone:'America/Sao_Paulo', year:'numeric',month:'2-digit',day:'2-digit'});
+    // Na manhã seguinte à festa, a agenda já passa à próxima data local.
     function isUpcoming(event) {
-      return event.dateTBD === true || (event.endsAt && new Date(event.endsAt).getTime() >= Date.now());
+      if (event.dateTBD === true) return true;
+      if (event.startsAt) return event.startsAt.slice(0,10) >= localDateBR.format(new Date());
+      return Boolean(event.endsAt) && new Date(event.endsAt).getTime() >= Date.now();
     }
     function sortUpcoming(a, b) {
       if (a.dateTBD && b.dateTBD) return 0;
@@ -692,9 +695,9 @@
       return 'PRÓXIMA FESTA';
     }
     function renderSpotlight() {
-      const featured = EVENTS.filter(isUpcoming)
-        .filter(e => e.featured && /POPERIA|HITOU/i.test(e.title))
-        .sort(sortUpcoming).slice(0,2);
+      const upcoming = EVENTS.filter(isUpcoming).sort(sortUpcoming);
+      const featured = upcoming.filter(e => e.featured).slice(0,2);
+      if (!featured.length && upcoming.length) featured.push(upcoming[0]);
       const titleEl = document.getElementById('spotlightTitle');
       const eyebrowEl = document.getElementById('spotlightEyebrow');
       const introEl = document.getElementById('spotlightIntro');
@@ -707,13 +710,20 @@
         posterGrid.classList.add('spotlight-grid--single');
         return;
       }
-      eyebrowEl.textContent = 'DUKE HAUS / AGENDA EM DESTAQUE';
+      const todayFeatured = featured.length === 1
+        && !featured[0].dateTBD
+        && featured[0].startsAt.slice(0,10) === localDateBR.format(new Date());
+      eyebrowEl.textContent = todayFeatured ? 'HOJE / DUKE HAUS' : 'DUKE HAUS / AGENDA EM DESTAQUE';
       titleEl.innerHTML = featured.length > 1
         ? 'DUAS FESTAS.<br><span>UMA PISTA.</span>'
-        : 'A PRÓXIMA<br><span>É NA DUKE.</span>';
+        : todayFeatured
+          ? 'HOJE TEM<br><span>' + featured[0].title.split(' — ')[0].toUpperCase() + '.</span>'
+          : 'A PRÓXIMA<br><span>É NA DUKE.</span>';
       introEl.textContent = featured.length > 1
-        ? 'O funk abre o fim de semana com HITOU! E no sábado tem POPERIA. Escolha sua noite e garanta seu ingresso.'
-        : 'A próxima festa da Duke está chegando. Garanta seu ingresso!';
+        ? 'Duas festas na Duke: ' + featured.map(e => e.title).join(' e ') + '. Escolha sua noite e garanta seu ingresso.'
+        : todayFeatured
+          ? 'É hoje! ' + featured[0].title + ' na Duke. Confira o flyer e garanta seu ingresso pelo PIX sem taxa ou pela Blipy.'
+          : 'A próxima festa da Duke está chegando. Garanta seu ingresso!';
       posterGrid.classList.toggle('spotlight-grid--single',featured.length===1);
       posterGrid.innerHTML = featured.map(event => {
         const fallbackTitle = event.title.toUpperCase().includes('HITOU') ? 'HITOU!<br><span>BAILE FUNK</span>' : event.posterTitle;
@@ -723,7 +733,7 @@
         const noImageNote = event.image ? '' : '<span class="flyer-note">CONSULTE O FLYER ORIGINAL NA BLIPY ↗</span>';
         const isHitou = /HITOU/i.test(event.title);
         const isPoperia = /POPERIA/i.test(event.title);
-        const eventDate = isPoperia ? 'SÁBADO, 17/10' : (isHitou ? 'SEXTA, 16/10' : event.dateLabel);
+        const eventDate = !event.dateTBD && event.startsAt.slice(0,10) === localDateBR.format(new Date()) ? 'HOJE • ' + event.dateLabel : event.dateLabel;
         return `<article class="spotlight-card ${isHitou ? 'spotlight-card--hitou' : ''}"
             style="--spot-accent:${event.color};--spot-bg:${event.background}">
           <a class="spotlight-visual" href="${event.blipy}" target="_blank" rel="noopener noreferrer" aria-label="Ver capa, informações e ingressos de ${event.title} na Blipy">
@@ -790,7 +800,7 @@
         return;
       }
       grid.innerHTML = list.map((event) => {
-        const closed = !event.dateTBD && new Date(event.endsAt).getTime() < now;
+        const closed = !isUpcoming(event);
         const fallTitle = event.posterTitle || event.title;
         return `<article class="event-card ${event.featured ? 'is-featured' : ''}" style="--card-color:${event.color};--visual-bg:${event.background}">
           <div class="event-visual">
