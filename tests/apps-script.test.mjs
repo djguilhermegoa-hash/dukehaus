@@ -7,7 +7,7 @@ import { createContext, runInContext } from 'node:vm';
 const code = readFileSync(new URL('../apps-script/Code.gs', import.meta.url), 'utf8');
 const feed = [
   { id: 'nov-27', name: 'Festa sexta', startAt: '2026-11-27T23:00:00-03:00', endAt: '2026-11-28T05:00:00-03:00', status: 'scheduled' },
-  { id: 'nov-28', name: 'Festa sÃ¡bado', startAt: '2026-11-28T23:00:00-03:00', endAt: '2026-11-29T05:00:00-03:00', status: 'scheduled' },
+  { id: 'nov-28', name: 'Festa sábado', startAt: '2026-11-28T23:00:00-03:00', endAt: '2026-11-29T05:00:00-03:00', status: 'scheduled' },
   { id: 'dez-01', name: 'Festa dezembro', startAt: '2026-12-01T23:00:00-03:00', endAt: null, status: 'unknown' },
   { id: 'cancelada', name: 'Festa cancelada', startAt: '2026-11-28T23:00:00-03:00', endAt: null, status: 'cancelled' }
 ];
@@ -163,7 +163,7 @@ function harness() {
       Charset: { UTF_8: 'UTF-8' },
       formatDate,
       parseDate: (value, zone) => {
-        // As datas de configuraÃ§Ã£o usadas pelo fixture estÃ£o em BRT (UTC-03).
+        // As datas de configuração usadas pelo fixture estão em BRT (UTC-03).
         assert.equal(zone, 'America/Sao_Paulo');
         return new ClockDate(value.replace(' ', 'T') + ':00-03:00');
       },
@@ -188,9 +188,9 @@ function harness() {
   });
 
   runInContext(code, context);
-  insert('PÃ¡gina1');
+  insert('Página1');
   context.configurarPlanilha();
-  const config = sheets.get('CONFIGURAÃ‡Ã•ES').rows;
+  const config = sheets.get('CONFIGURAÇÕES').rows;
   const eventRules = sheets.get('EVENTOS').rows;
 
   return {
@@ -210,11 +210,11 @@ function harness() {
 
 function publicList(options = {}) {
   const {
-    id = 'sexta-off', active = true, visibility = 'PÃºblica', eventId = 'nov-27', limit = 1,
+    id = 'sexta-off', active = true, visibility = 'Pública', eventId = 'nov-27', limit = 1,
     opens = '2026-11-25 18:00', closes = '2026-11-27 22:00', entry = '00:30',
     code = 'CONVIDADO', whatsapp = 'Opcional', token = '', message = 'Nome confirmado na lista de teste.'
   } = options;
-  return [id, active, visibility, 'Festa teste OFF', 'DescriÃ§Ã£o da lista', eventId, limit,
+  return [id, active, visibility, 'Festa teste OFF', 'Descrição da lista', eventId, limit,
     opens, closes, entry, code, whatsapp, message, token, ''];
 }
 
@@ -234,13 +234,13 @@ function off(challenge, overrides = {}) {
   };
 }
 
-test('prepara planilha privada, BrasÃ­lia, gatilho Ãºnico e dois eventos de novembro no catÃ¡logo', () => {
+test('prepara planilha privada, Brasília, gatilho único e dois eventos de novembro no catálogo', () => {
   const app = harness();
   assert.deepEqual(app.setup(), {
-    title: 'DUKE HAUS â€” LISTAS DE CONVIDADOS', timezone: 'America/Sao_Paulo', locale: 'pt_BR'
+    title: 'DUKE HAUS — LISTAS DE CONVIDADOS', timezone: 'America/Sao_Paulo', locale: 'pt_BR'
   });
   assert.deepEqual(app.workbook.getSheets().map(sheet => sheet.name),
-    ['CONFIGURAÃ‡Ã•ES', 'EVENTOS', 'ANIVERSARIANTES', 'LISTA OFF']);
+    ['CONFIGURAÇÕES', 'EVENTOS', 'ANIVERSARIANTES', 'LISTA OFF']);
   assert.equal(app.triggers.length, 1);
   app.context.configurarPlanilha();
   assert.equal(app.triggers.length, 1);
@@ -250,7 +250,7 @@ test('prepara planilha privada, BrasÃ­lia, gatilho Ãºnico e dois eventos de 
   assert.deepEqual(result.offLists, []);
 });
 
-test('valida mÃªs do evento em BrasÃ­lia, grava telefone/data e repete a confirmaÃ§Ã£o sem nova linha', () => {
+test('valida mês do evento em Brasília, grava telefone/data e repete a confirmação sem nova linha', () => {
   const app = harness();
   const { challenge } = app.get();
   app.wait();
@@ -269,7 +269,7 @@ test('valida mÃªs do evento em BrasÃ­lia, grava telefone/data e repete a con
   assert.equal(app.registrations('ANIVERSARIANTES').length, 1);
 
   const december = app.post(birthday(challenge, { eventId: 'dez-01', birthDate: '1995-12-05' }));
-  assert.equal(december.ok, true, 'o mÃªs do evento prevalece antes da virada do mÃªs');
+  assert.equal(december.ok, true, 'o mês do evento prevalece antes da virada do mês');
 });
 
 test('respeita limites, regras e encerramento dos aniversariantes', () => {
@@ -278,7 +278,7 @@ test('respeita limites, regras e encerramento dos aniversariantes', () => {
   firstRule[6] = 1;
   firstRule[7] = '2026-11-27 22:20';
   const secondRule = app.eventRules.find(row => row[0] === 'nov-28');
-  secondRule[5] = 'NÃ£o';
+  secondRule[5] = 'Não';
 
   const catalog = app.get();
   assert.deepEqual(catalog.birthdayEvents.map(event => event.id), ['nov-27', 'dez-01']);
@@ -290,7 +290,7 @@ test('respeita limites, regras e encerramento dos aniversariantes', () => {
   assert.equal(app.get().birthdayEvents.some(event => event.id === 'nov-27'), false);
 });
 
-test('Lista OFF pÃºblica e privada, cÃ³digo somente no servidor e horÃ¡rio da porta no dia seguinte', () => {
+test('Lista OFF pública e privada, código somente no servidor e horário da porta no dia seguinte', () => {
   const app = harness();
   app.config.push(publicList(), publicList({ id: 'privada', visibility: 'Privada', code: 'SECRETO' }));
   app.context.gerarLinksPrivados();
@@ -318,9 +318,9 @@ test('Lista OFF pÃºblica e privada, cÃ³digo somente no servidor e horÃ¡rio
   assert.equal(app.registrations('LISTA OFF').length, 1);
 });
 
-test('Ãºltima vaga exige lock e Ã© atribuÃ­da uma sÃ³ vez; sucesso depende da confirmaÃ§Ã£o', () => {
+test('última vaga exige lock e é atribuída uma só vez; sucesso depende da confirmação', () => {
   const app = harness();
-  app.config.push(publicList({ whatsapp: 'ObrigatÃ³rio' }));
+  app.config.push(publicList({ whatsapp: 'Obrigatório' }));
   const { challenge } = app.get();
   app.wait();
   assert.equal(app.post(off(challenge)).code, 'INVALID_WHATSAPP');
@@ -341,7 +341,7 @@ test('Ãºltima vaga exige lock e Ã© atribuÃ­da uma sÃ³ vez; sucesso depen
   assert.ok(app.logs.every(log => !log.includes('Joana Santos') && !log.includes('912345678')));
 });
 
-test('fechamento, desativaÃ§Ã£o e indisponibilidade da programaÃ§Ã£o preservam lista manual privada', () => {
+test('fechamento, desativação e indisponibilidade da programação preservam lista manual privada', () => {
   const app = harness();
   app.config.push(publicList(), publicList({ id: 'inativa', active: false }));
   app.config.push(publicList({ id: 'manual', eventId: 'privado-1', visibility: 'Privada', whatsapp: 'Oculto', code: '' }));
@@ -370,7 +370,7 @@ test('fechamento, desativaÃ§Ã£o e indisponibilidade da programaÃ§Ã£o pre
   assert.equal(app.registrations('LISTA OFF')[0][2], '');
 });
 
-test('defesas anti-automaÃ§Ã£o, janela expirada e catÃ¡logo com programaÃ§Ã£o atualizada', () => {
+test('defesas anti-automação, janela expirada e catálogo com programação atualizada', () => {
   const app = harness();
   const { challenge } = app.get();
   assert.equal(app.post(birthday(challenge)).code, 'TOO_FAST');
@@ -386,5 +386,5 @@ test('defesas anti-automaÃ§Ã£o, janela expirada e catÃ¡logo com programaÃ
   app.changeFeed([feed[1]]);
   assert.deepEqual(app.get().birthdayEvents.map(item => item.id), ['nov-28']);
   app.context.atualizarEventos();
-  assert.equal(app.eventRules.find(row => row[0] === 'nov-27')[4], 'Fora da programaÃ§Ã£o');
+  assert.equal(app.eventRules.find(row => row[0] === 'nov-27')[4], 'Fora da programação');
 });
