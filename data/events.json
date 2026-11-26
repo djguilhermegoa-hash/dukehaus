@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "syncedAt": "2026-11-26T00:58:12+00:00",
+  "events": [
+    {
+      "id": "ferias-proibidas-noite-sem-regras",
+      "name": "FÉRIAS PROIBIDAS - NOITE SEM REGRAS",
+      "startAt": "2026-11-27T23:00:00-03:00",
+      "endAt": "2026-11-28T05:00:00-03:00",
+      "status": "scheduled",
+      "flyerUrl": "https://projetoblippy.vercel.app/api/midia/3c11cecf-1991-483b-99d9-0581b76a5f9c",
+      "description": "sex., 27 de nov. de 2026, às 23:00 em DUKE HAUS, Montes Claros/MG. Ingressos com preço final no Blipy.",
+      "startingPrice": 12.5,
+      "currency": "BRL",
+      "purchaseUrl": "https://projetoblippy.vercel.app/e/ferias-proibidas-noite-sem-regras",
+      "descriptionMediaUrl": "https://projetoblippy.vercel.app/api/midia/4c51aa20-171e-4b67-971f-14908bd27232"
+    },
+    {
+      "id": "ferias-proibidas-noite-sem-regras-8bzn",
+      "name": "SEGUNDA EU PARO - SÁBADO",
+      "startAt": "2026-11-28T23:00:00-03:00",
+      "endAt": "2026-11-29T05:00:00-03:00",
+      "status": "scheduled",
+      "flyerUrl": "https://projetoblippy.vercel.app/api/midia/b82ec966-836e-4df0-8927-2bb6fc2a9945",
+      "description": "sáb., 28 de nov. de 2026, às 23:00 em DUKE HAUS, Montes Claros/MG. Ingressos com preço final no Blipy.",
+      "startingPrice": 12.5,
+      "currency": "BRL",
+      "purchaseUrl": "https://projetoblippy.vercel.app/e/ferias-proibidas-noite-sem-regras-8bzn",
+      "descriptionMediaUrl": "https://projetoblippy.vercel.app/api/midia/88158044-c472-4060-ab64-ef8eb8ff7a1d"
+    }
+  ]
+}
