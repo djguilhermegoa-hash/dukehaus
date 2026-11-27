@@ -9,7 +9,8 @@ const DUKE = Object.freeze({
   },
   config: ['ID da lista', 'Ativa', 'Visibilidade', 'Título', 'Descrição',
     'ID do evento', 'Limite de vagas', 'Abre em', 'Encerra em', 'Entrada OFF até',
-    'Código de convite', 'WhatsApp', 'Mensagem de confirmação', 'Token privado', 'Link privado'],
+    'Código de convite', 'WhatsApp', 'Mensagem de confirmação', 'Token privado', 'Link privado',
+    'Idade mínima', 'Aviso da lista', 'Link antecipado da Blipy'],
   events: ['ID do evento', 'Nome na Blipy', 'Início na Blipy', 'Fim na Blipy', 'Status na Blipy',
     'Aniversariantes', 'Limite aniversariantes', 'Encerramento aniversariantes',
     'Nome do evento privado', 'Início do evento privado', 'Fim do evento privado'],
@@ -20,6 +21,7 @@ const DUKE = Object.freeze({
   birthdayMessage: 'Pronto! Seu nome está na lista de aniversariantes da Duke Haus. Apresente um documento oficial com foto na entrada.',
   offMessage: 'Pronto! Seu nome está na Lista OFF da Duke Haus.'
 });
+const IDADE_DECLARADA = 'Idade mínima declarada';
 
 /** Execute uma vez no editor vinculado à planilha. Pode ser executada novamente. */
 function configurarPlanilha() {
@@ -35,10 +37,10 @@ function configurarPlanilha() {
     sheets[0].setName(DUKE.sheets.config);
   }
 
-  const config = prepararAba_(spreadsheet, DUKE.sheets.config, DUKE.config);
+  const config = prepararAba_(spreadsheet, DUKE.sheets.config, DUKE.config, 15);
   const events = prepararAba_(spreadsheet, DUKE.sheets.events, DUKE.events);
   const birthday = prepararAba_(spreadsheet, DUKE.sheets.birthday, DUKE.registration);
-  const off = prepararAba_(spreadsheet, DUKE.sheets.off, DUKE.registration);
+  const off = prepararAba_(spreadsheet, DUKE.sheets.off, [...DUKE.registration, IDADE_DECLARADA], DUKE.registration.length);
 
   const checkbox = SpreadsheetApp.newDataValidation().requireCheckbox().setAllowInvalid(false).build();
   const visibility = SpreadsheetApp.newDataValidation()
@@ -54,7 +56,12 @@ function configurarPlanilha() {
   config.getRange(1, 10).setNote('Use uma data e hora de Brasília completas. Também pode digitar HH:mm em texto; um horário anterior à abertura do evento será no dia seguinte.');
   config.getRange(1, 11).setNote('Opcional. O código diferencia maiúsculas de minúsculas.');
   config.getRange(1, 14).setNote('Preenchido pelo menu Duke Haus > Gerar links privados. Limpe o token para girar o link.');
+  config.getRange(1, 16).setNote('Informe uma idade inteira (por exemplo, 25). Em branco, não há declaração de idade.');
+  config.getRange(1, 17).setNote('Texto curto mostrado no formulário, por exemplo sobre consumação mínima.');
+  config.getRange(1, 18).setNote('URL HTTPS individual do evento na Blipy para oferecer compra antecipada.');
   config.hideColumns(14);
+  coluna_(config, 16).setNumberFormat('0');
+  coluna_(off, 16).setNumberFormat('0');
 
   // Ausência de regra significa benefício habilitado para eventos da Blipy.
   coluna_(events, 6).setDataValidation(SpreadsheetApp.newDataValidation()
@@ -200,6 +207,7 @@ function catalogo_(invite) {
       id: list.id, title: list.title, description: list.description,
       eventId: event.id, eventName: event.name, eventStartAt: new Date(event.start).toISOString(),
       whatsapp: list.whatsapp, requiresCode: Boolean(list.code),
+      minimumAge: list.minimumAge, notice: list.notice, advancePurchaseUrl: list.advancePurchaseUrl,
       entryUntil: entry == null ? null : new Date(entry).toISOString()
     });
   }
@@ -238,6 +246,7 @@ function inscrever_(payload) {
     const rules = regrasEventos_(spreadsheet);
     const event = eventoDaLista_(input.eventId, feed, rules);
     let capacity, message, sheet, modality, phone;
+    let declaredAge = '';
     if (input.type === 'birthday') {
       const rule = rules.get(input.eventId);
       const liveEvent = feed && feed.get(input.eventId);
@@ -258,6 +267,9 @@ function inscrever_(payload) {
       }
       if (!event && !feed) erroPublico_('FEED_UNAVAILABLE', 'A programação está temporariamente indisponível.');
       if (!listaAberta_(list, event, now)) erroPublico_('CLOSED', 'As inscrições para esta lista estão encerradas.');
+      if (list.minimumAge != null && input.declaredAge !== list.minimumAge) {
+        erroPublico_('AGE_DECLARATION', 'Para esta lista, declare que você tem ' + list.minimumAge + ' anos ou mais.');
+      }
       if (list.code && !stringsIguais_(list.code, input.code)) erroPublico_('INVALID_CODE', 'Confira o código de convite.');
       if (list.whatsapp === 'required' && !input.whatsapp) erroPublico_('INVALID_WHATSAPP', 'Informe um WhatsApp válido com DDD.');
       capacity = list.limit;
@@ -265,6 +277,7 @@ function inscrever_(payload) {
       sheet = off;
       modality = 'LISTA OFF';
       phone = list.whatsapp === 'hidden' ? '' : input.whatsapp;
+      declaredAge = list.minimumAge == null ? '' : list.minimumAge;
     }
 
     const entries = all.filter(row => row[5] === input.eventId && rowAtiva_(row));
@@ -282,6 +295,7 @@ function inscrever_(payload) {
       literal_(event.name), literal_(event.id), new Date(event.start), modality, new Date(now), 'CONFIRMADA',
       literal_(input.listId), input.requestId, signature, identity, literal_(message)
     ];
+    if (input.type === 'off') row.push(declaredAge);
     const rowNumber = proximaLinha_(sheet);
     sheet.getRange(rowNumber, 1, 1, row.length).setValues([row]);
     SpreadsheetApp.flush();
@@ -318,11 +332,17 @@ function dadosInscricao_(payload) {
   if (type === 'birthday' && (!dataNascimentoValida_(birthDate) || birthDate > dataLocal_(Date.now(), 'yyyy-MM-dd'))) {
     erroPublico_('INVALID_BIRTH_DATE', 'Informe uma data de nascimento válida.');
   }
-  return {
+  const input = {
     requestId, type, name, eventId, listId, whatsapp, birthDate,
     code: type === 'off' ? campo_(payload.code, 160) : '',
     invite: type === 'off' ? campo_(payload.invite, 120) : ''
   };
+  // Mantém a assinatura de envios antigos que não declaram uma idade mínima.
+  if (type === 'off' && payload.minimumAgeAccepted === true &&
+      Number.isSafeInteger(payload.minimumAge) && payload.minimumAge > 0) {
+    input.declaredAge = payload.minimumAge;
+  }
+  return input;
 }
 
 function regrasEventos_(spreadsheet) {
@@ -372,14 +392,19 @@ function lerListasOff_(spreadsheet) {
     const code = textoConfiguracao_(row[10], 160);
     const whatsapp = { '': 'hidden', oculto: 'hidden', opcional: 'optional', obrigatorio: 'required' }[normalizarTexto_(row[11])];
     const invite = conviteValido_(row[13]) ? row[13] : '';
+    const minimumAge = idadeMinima_(row[15]);
+    const advancePurchaseUrl = textoConfiguracao_(row[17], 300);
     if (visibility === 'privada' && invite) inviteCounts.set(invite, (inviteCounts.get(invite) || 0) + 1);
     const valid = (row[1] === true || normalizarTexto_(row[1]) === 'sim') &&
       (visibility === 'publica' || (visibility === 'privada' && invite)) && title && eventId &&
-      typeof whatsapp === 'string' && ![limit, opens, closes, entryValue].some(Number.isNaN) &&
+      typeof whatsapp === 'string' && ![limit, opens, closes, entryValue, minimumAge].some(Number.isNaN) &&
       (opens == null || closes == null || opens < closes);
     lists.set(id, valid ? {
-      id, visibility, title, eventId, limit, opens, closes, entryValue, code, whatsapp, invite,
-      description: textoConfiguracao_(row[4], 1600), message: textoConfiguracao_(row[12], 500)
+      id, visibility, title, eventId, limit, opens, closes, entryValue, code, whatsapp, invite, minimumAge,
+      description: textoConfiguracao_(row[4], 1600), message: textoConfiguracao_(row[12], 500),
+      notice: textoConfiguracao_(row[16], 500),
+      advancePurchaseUrl: /^https:\/\/projetoblippy\.vercel\.app\/e\/[A-Za-z0-9_-]+\/?$/.test(advancePurchaseUrl)
+        ? advancePurchaseUrl : null
     } : null);
   }
   return new Map([...lists].filter(([, list]) => list &&
@@ -555,10 +580,13 @@ function abrirPlanilha_() {
   return SpreadsheetApp.openById(id);
 }
 
-function prepararAba_(spreadsheet, name, headers) {
+function prepararAba_(spreadsheet, name, headers, colunasExistentes = headers.length) {
   const sheet = spreadsheet.getSheetByName(name) || spreadsheet.insertSheet(name);
+  const columns = sheet.getMaxColumns();
+  if (columns < headers.length) sheet.insertColumnsAfter(columns, headers.length - columns);
   const range = sheet.getRange(1, 1, 1, headers.length);
-  if (sheet.getLastRow() > 0 && !range.getValues()[0].every((label, i) => label === headers[i])) {
+  if (sheet.getLastRow() > 0 && !range.getValues()[0].every((label, i) =>
+    label === headers[i] || (i >= colunasExistentes && label === ''))) {
     throw new Error('Os cabeçalhos da aba ' + name + ' foram alterados. Revise a integração antes de continuar.');
   }
   range.setValues([headers]).setFontWeight('bold').setBackground('#181818').setFontColor('#ffffff').setWrap(true);
@@ -667,6 +695,13 @@ function limite_(value) {
   if (value === '' || value == null) return null;
   const number = Number(value);
   return Number.isSafeInteger(number) && number > 0 ? number : NaN;
+}
+
+function idadeMinima_(value) {
+  if (typeof value === 'number') return limite_(value);
+  const text = textoConfiguracao_(value, 30);
+  if (!text) return null;
+  return /^\d+$/.test(text) ? limite_(text) : NaN;
 }
 
 function literal_(value) {
