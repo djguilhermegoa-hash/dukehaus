@@ -81,16 +81,43 @@
     }
   }
 
+  function minimumAgeFor(list) {
+    return Number.isInteger(list?.minimumAge) && list.minimumAge > 0 ? list.minimumAge : null;
+  }
+
   function renderOffDetails() {
-    const list = catalog?.offLists.find(item => item.id === off.form.elements.listId.value);
+    const lists = catalog?.offLists || [];
+    const list = lists.find(item => item.id === off.form.elements.listId.value);
     const whatsapp = off.form.elements.whatsapp;
     const code = off.form.elements.code;
+    const age = off.form.elements.minimumAgeAccepted;
+    const minimumAge = minimumAgeFor(list);
     const eventDate = displayTime(list?.eventStartAt);
     const entryDate = displayTime(list?.entryUntil);
     $("off-event-name").textContent = list?.eventName || "";
     $("off-event-start").textContent = eventDate;
     $("off-description").textContent = list?.description || "";
     $("off-entry").textContent = entryDate ? "Entrada OFF até " + entryDate + "." : "";
+    const policyNotice = list?.notice || "";
+    const summaryNotice = $("off-summary-notice");
+    summaryNotice.textContent = lists.length === 1 ? policyNotice : "";
+    summaryNotice.hidden = !summaryNotice.textContent;
+    $("off-notice").textContent = lists.length > 1 ? policyNotice : "";
+
+    const minimumAgeText = minimumAge === null ? "" : String(minimumAge);
+    if (age.value !== minimumAgeText) age.checked = false;
+    age.value = minimumAgeText;
+    age.disabled = minimumAge === null;
+    age.required = minimumAge !== null;
+    $("off-age").hidden = age.disabled;
+    $("off-age-label").textContent = age.disabled ? "" : "Declaro que tenho " + minimumAgeText + " anos ou mais.";
+
+    const purchaseUrl = list?.advancePurchaseUrl;
+    const hasAdvancePurchase = typeof purchaseUrl === "string" &&
+      /^https:\/\/projetoblippy\.vercel\.app\/e\/[a-z0-9-]+$/.test(purchaseUrl);
+    $("off-advance").hidden = !hasAdvancePurchase;
+    if (hasAdvancePurchase) $("off-advance-link").href = purchaseUrl;
+    else $("off-advance-link").removeAttribute("href");
     const showWhatsapp = ["required", "optional"].includes(list?.whatsapp);
     $("off-whatsapp").hidden = !showWhatsapp;
     whatsapp.disabled = !showWhatsapp;
@@ -229,6 +256,11 @@
       if (!list) return null;
       payload.listId = list.id;
       payload.eventId = list.eventId;
+      const minimumAge = minimumAgeFor(list);
+      if (minimumAge !== null) {
+        payload.minimumAge = minimumAge;
+        payload.minimumAgeAccepted = fields.has("minimumAgeAccepted");
+      }
       if (fields.has("code")) payload.code = fields.get("code");
       if (privateRoute) payload.invite = invite;
     }
@@ -272,7 +304,7 @@
           result.message || "Pronto! Sua inscrição na Lista OFF foi registrada.", "success");
       } else if (!result.ok) {
         setFeedback(form, result.message || "Não foi possível registrar sua inscrição.", "error");
-        if (result.code === "CHALLENGE_EXPIRED") void loadCatalog();
+        if (["CHALLENGE_EXPIRED", "AGE_DECLARATION"].includes(result.code)) void loadCatalog();
       } else {
         throw new Error("Confirmação incompleta");
       }
@@ -295,6 +327,7 @@
   });
   off.form.elements.listId.addEventListener("change", () => {
     off.form.elements.code.value = "";
+    off.form.elements.minimumAgeAccepted.checked = false;
     renderOffDetails();
     setFeedback(off.form, "", "");
   });

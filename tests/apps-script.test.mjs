@@ -41,6 +41,7 @@ function harness() {
       this.name = name;
       this.rows = [];
       this.maximumRows = 1000;
+      this.maximumColumns = 26;
     }
 
     getLastRow() {
@@ -50,6 +51,11 @@ function harness() {
     }
 
     getMaxRows() { return this.maximumRows; }
+    getMaxColumns() { return this.maximumColumns; }
+    insertColumnsAfter(column, count) {
+      assert.equal(column, this.maximumColumns);
+      this.maximumColumns += count;
+    }
     insertRowsBefore(row, count) {
       this.rows.splice(row - 1, 0, ...Array.from({ length: count }, () => []));
       this.maximumRows += count;
@@ -63,6 +69,7 @@ function harness() {
       sheets.set(name, this);
     }
     getRange(row, column, height = 1, width = 1) {
+      assert.ok(column + width - 1 <= this.maximumColumns, 'intervalo dentro da grade');
       const read = () => Array.from({ length: height }, (_, rowOffset) =>
         Array.from({ length: width }, (_, columnOffset) =>
           this.rows[row + rowOffset - 1]?.[column + columnOffset - 1] ?? ''));
@@ -212,10 +219,11 @@ function publicList(options = {}) {
   const {
     id = 'sexta-off', active = true, visibility = 'Pública', eventId = 'nov-27', limit = 1,
     opens = '2026-11-25 18:00', closes = '2026-11-27 22:00', entry = '00:30',
-    code = 'CONVIDADO', whatsapp = 'Opcional', token = '', message = 'Nome confirmado na lista de teste.'
+    code = 'CONVIDADO', whatsapp = 'Opcional', token = '', message = 'Nome confirmado na lista de teste.',
+    minimumAge = '', notice = '', advanceUrl = ''
   } = options;
   return [id, active, visibility, 'Festa teste OFF', 'Descrição da lista', eventId, limit,
-    opens, closes, entry, code, whatsapp, message, token, ''];
+    opens, closes, entry, code, whatsapp, message, token, '', minimumAge, notice, advanceUrl];
 }
 
 function birthday(challenge, overrides = {}) {
@@ -387,4 +395,63 @@ test('defesas anti-automação, janela expirada e catálogo com programação at
   assert.deepEqual(app.get().birthdayEvents.map(item => item.id), ['nov-28']);
   app.context.atualizarEventos();
   assert.equal(app.eventRules.find(row => row[0] === 'nov-27')[4], 'Fora da programação');
+});
+
+test('Lista OFF até 00h30 exige declaração de 25+, exibe aviso/link e só registra o limite declarado', () => {
+  const app = harness();
+  const officialLink = 'https://projetoblippy.vercel.app/e/ferias-proibidas-noite-sem-regras';
+  app.config.push(publicList({
+    limit: null, closes: '28/11/2026 00:30', code: '', minimumAge: 25,
+    notice: 'Essa Lista OFF tem consumação mínima de R$ 30.', advanceUrl: officialLink
+  }));
+  app.clock('2026-11-28T00:20:00-03:00');
+  const catalog = app.get();
+  assert.equal(catalog.offLists[0].minimumAge, 25);
+  assert.equal(catalog.offLists[0].notice, 'Essa Lista OFF tem consumação mínima de R$ 30.');
+  assert.equal(catalog.offLists[0].advancePurchaseUrl, officialLink);
+  assert.equal(catalog.offLists[0].entryUntil, '2026-11-28T03:30:00.000Z');
+  app.wait();
+  const input = off(catalog.challenge, { code: '' });
+  assert.equal(app.post(input).code, 'AGE_DECLARATION');
+  assert.equal(app.post({ ...input, minimumAge: 24, minimumAgeAccepted: true }).code, 'AGE_DECLARATION');
+  assert.equal(app.post({ ...input, minimumAge: 25, minimumAgeAccepted: 'true' }).code, 'AGE_DECLARATION');
+  assert.equal(app.registrations('LISTA OFF').length, 0);
+  const accepted = { ...input, minimumAge: 25, minimumAgeAccepted: true };
+  const receipt = app.post(accepted);
+  assert.equal(receipt.ok, true);
+  assert.equal(app.registrations('LISTA OFF')[0][3], '');
+  assert.equal(app.registrations('LISTA OFF')[0][15], 25);
+  assert.deepEqual(app.post(accepted), receipt);
+  app.clock('2026-11-28T00:30:00-03:00');
+  assert.deepEqual(app.get().offLists, []);
+  assert.equal(app.post(off(catalog.challenge, { minimumAge: 25, minimumAgeAccepted: true })).code, 'CLOSED');
+});
+
+test('atualização da planilha preserva cabeçalhos originais, regras e recibo de envios anteriores', () => {
+  const app = harness();
+  app.config.push(publicList().slice(0, 15));
+  const catalog = app.get();
+  assert.equal(catalog.offLists[0].minimumAge, null);
+  app.wait();
+  const input = off(catalog.challenge);
+  const receipt = app.post(input);
+  assert.equal(receipt.ok, true);
+  const configSheet = app.workbook.getSheetByName('CONFIGURAÇÕES');
+  const offSheet = app.workbook.getSheetByName('LISTA OFF');
+  for (const sheet of [configSheet, offSheet]) {
+    sheet.maximumColumns = 15;
+    sheet.rows.forEach(row => { row.length = Math.min(row.length, 15); });
+  }
+  const oldRows = offSheet.rows.map(row => row.slice());
+  app.context.configurarPlanilha();
+  assert.deepEqual(app.config[0].slice(15),
+    ['Idade mínima', 'Aviso da lista', 'Link antecipado da Blipy']);
+  assert.equal(offSheet.rows[0][15], 'Idade mínima declarada');
+  assert.deepEqual(offSheet.rows.map(row => row.slice(0, 15)), oldRows);
+  assert.equal(app.triggers.length, 1);
+  assert.deepEqual(app.post(input), receipt);
+  app.config[1][17] = 'https://projetoblippy.vercel.app.evil.example/e/ferias-proibidas-noite-sem-regras';
+  assert.equal(app.get().offLists[0].advancePurchaseUrl, null);
+  app.config[1][15] = 'vinte e cinco';
+  assert.deepEqual(app.get().offLists, []);
 });
