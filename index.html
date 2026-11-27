@@ -49,11 +49,12 @@
     <article class="list-card" id="birthday-card">
       <h3 class="eyebrow">ANIVERSARIANTES DO MÊS</h3>
       <button class="btn btn-green list-toggle" id="birthday-toggle" type="button" aria-expanded="false" aria-controls="birthday-panel">ANIVERSARIANTE DO MÊS? COLOQUE SEU NOME NA LISTA</button>
+      <p class="off-notice" id="birthday-benefit">Aniversariante do mês tem entrada OFF nos eventos participantes.</p>
       <div class="list-panel" id="birthday-panel" hidden>
-        <p id="birthday-rule">Aniversariante do mês tem entrada OFF nos eventos participantes. É obrigatória a apresentação de documento oficial com foto na entrada.</p>
+        <p id="birthday-rule">É obrigatória a apresentação de documento oficial com foto na entrada.</p>
         <p id="birthday-reference"></p>
         <p id="birthday-availability" role="status"></p>
-        <form id="birthday-form" aria-describedby="birthday-rule" hidden>
+        <form id="birthday-form" aria-describedby="birthday-benefit birthday-rule" hidden>
           <fieldset>
             <label>Nome completo<input name="name" autocomplete="name" maxlength="120" required/></label>
             <label>Data de nascimento<input name="birthDate" type="date" autocomplete="bday" required/></label>
