@@ -1,32 +1,51 @@
 <!DOCTYPE html>
 
 <html lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/><meta content="#0b0b0e" name="theme-color"/><meta content="Confira a programação, os ingressos e as listas da Duke Haus em Montes Claros, MG." name="description"/><title>Duke Haus — Programação e ingressos</title>
-<link rel="stylesheet" href="assets/duke.css"/>
+<link rel="stylesheet" href="assets/duke.css?v=20261127-listas"/>
 <meta name="referrer" content="no-referrer"/>
 <script defer src="assets/duke-config.js"></script>
 <script defer src="assets/duke-events.js"></script>
-<script defer src="assets/duke-lists.js"></script>
+<script defer src="assets/duke-lists.js?v=20261127-listas"></script>
 </head><body><div aria-hidden="true" class="noise"></div>
 <div aria-hidden="true" class="ticker"><div class="ticker-track"><span>✳ DUKE HAUS ✳ MONTES CLAROS ✳ A NOITE É DE QUEM VIVE ✳</span><span>✳ DUKE HAUS ✳ MONTES CLAROS ✳ A NOITE É DE QUEM VIVE ✳</span></div></div>
-<div class="header-shell"><header class="header wrap"><a aria-label="Duke Haus" class="brand" href="#inicio"><span class="brand-mark" aria-hidden="true"></span></a><nav class="header-nav"><a href="#programacao">PROGRAMAÇÃO</a><a href="#ingressos">INGRESSOS</a><a class="nav-lists" href="#listas">LISTAS</a><a class="nav-ticket" href="https://projetoblippy.vercel.app/organizador/duke-haus" rel="noopener noreferrer" target="_blank">COMPRAR INGRESSO</a></nav></header></div>
-<main id="inicio"><section class="hero"><div aria-hidden="true" class="hero-symbol">✳</div><div class="wrap hero-inner"><div class="eyebrow reveal">MONTES CLAROS · MINAS GERAIS</div><h1 class="reveal">DUAS<br/>NOITES.<span class="light">SEM REGRAS.</span></h1><p class="hero-sub reveal">Confira as próximas festas e encontre a sua noite na Duke Haus.</p><div class="hero-cta reveal"><a class="btn btn-green" href="#programacao">CONHEÇA AS FESTAS ↓</a><a class="btn btn-outline" href="https://projetoblippy.vercel.app/organizador/duke-haus" rel="noopener noreferrer" target="_blank">COMPRAR INGRESSO</a></div><div class="hero-meta" id="hero-events" hidden></div></div></section>
-<div aria-hidden="true" class="runway"><div class="runway-track"><span>DUKE HAUS <em>✳</em> A NOITE É DE QUEM VIVE <em>✳</em> DUKE HAUS <em>✳</em> A NOITE É DE QUEM VIVE <em>✳</em></span><span>DUKE HAUS <em>✳</em> A NOITE É DE QUEM VIVE <em>✳</em> DUKE HAUS <em>✳</em> A NOITE É DE QUEM VIVE <em>✳</em></span></div></div>
-<section class="program wrap" id="programacao" aria-labelledby="program-title">
-  <div class="section-head reveal">
-    <div><div class="eyebrow">AGENDA</div><h2 id="program-title">SEU FINAL<br/><span>DE SEMANA.</span></h2></div>
-    <p>Confira os flyers oficiais e garanta seu ingresso.</p>
-  </div>
-  <div class="carousel-controls" id="event-controls" hidden>
-    <button class="btn btn-outline" id="prev-event" type="button" aria-label="Eventos anteriores" aria-controls="events">←</button>
-    <button class="btn btn-outline" id="next-event" type="button" aria-label="Próximos eventos" aria-controls="events">→</button>
-  </div>
-  <div class="events" id="events" aria-label="Carrossel de próximos eventos"></div>
-  <p class="fineprint" id="event-status" role="status"></p>
-  <noscript><p class="fineprint">Consulte a <a href="https://projetoblippy.vercel.app/organizador/duke-haus">programação na Blipy</a>.</p></noscript>
-</section>
+<div class="header-shell"><header class="header wrap"><a aria-label="Duke Haus" class="brand" href="#inicio"><span class="brand-mark" aria-hidden="true"></span></a><nav class="header-nav"><a class="nav-lists nav-primary" href="#listas">LISTAS</a><a href="#programacao">PROGRAMAÇÃO</a><a href="#ingressos">INGRESSOS</a></nav></header></div>
+<main id="inicio">
 <section class="lists" id="listas" aria-labelledby="lists-title">
   <div class="wrap">
     <div class="section-head reveal"><h2 id="lists-title">LISTAS<span>.</span></h2></div>
+    <article class="list-card list-card-off" id="off-card" hidden>
+      <h3 class="eyebrow" id="off-heading">LISTA OFF</h3>
+      <button class="btn btn-outline list-toggle" id="off-toggle" type="button" aria-expanded="false" aria-controls="off-panel">ABRIR LISTA OFF</button>
+      <p class="off-notice" id="off-summary-notice" hidden></p>
+      <div class="list-panel" id="off-panel" hidden>
+        <p id="off-availability" role="status"></p>
+        <form id="off-form" aria-labelledby="off-heading" hidden>
+          <fieldset>
+            <label id="off-choice">Lista<select name="listId" required></select></label>
+            <div class="off-event">
+              <p class="off-event-title" id="off-event-name"></p>
+              <p id="off-event-start"></p>
+              <p id="off-description"></p>
+              <p id="off-entry"></p>
+              <p class="off-notice" id="off-notice"></p>
+            </div>
+            <label>Nome completo<input name="name" autocomplete="name" maxlength="120" required/></label>
+            <label id="off-whatsapp">WhatsApp<input name="whatsapp" type="tel" autocomplete="tel" maxlength="26"/></label>
+            <label id="off-code" hidden>Código de convite<input name="code" type="password" autocomplete="off" maxlength="150"/></label>
+            <label class="list-check" id="off-age" hidden><input name="minimumAgeAccepted" type="checkbox" disabled/><span id="off-age-label"></span></label>
+            <div class="list-trap" aria-hidden="true"><label>Site<input name="website" tabindex="-1" autocomplete="off"/></label></div>
+            <p class="list-privacy">A Duke Haus é responsável pelos dados coletados para validar, organizar e conferir as inscrições e a entrada no evento. Os dados são guardados de forma privada no Google Planilhas via Google Apps Script pelo tempo necessário para administrar a lista e atender solicitações relacionadas. Para solicitar acesso, correção ou exclusão dos seus dados, fale com a <a href="https://wa.me/5538991047305" target="_blank" rel="noopener noreferrer">Duke Haus pelo WhatsApp</a>.</p>
+            <label class="list-check"><input name="privacyAccepted" type="checkbox" required/> Li o aviso de privacidade desta lista.</label>
+            <button class="btn btn-green list-submit" type="submit">ENVIAR MEU NOME</button>
+          </fieldset>
+          <p class="list-feedback" role="status" aria-live="polite" tabindex="-1"></p>
+        </form>
+        <div class="off-advance" id="off-advance" hidden>
+          <p>Com a consumação comprada antecipadamente, você pode entrar a qualquer horário durante a festa.</p>
+          <a id="off-advance-link" href="#" target="_blank" rel="noopener noreferrer">VER CONSUMAÇÃO ANTECIPADA NA BLIPY ↗</a>
+        </div>
+      </div>
+    </article>
     <article class="list-card" id="birthday-card">
       <h3 class="eyebrow">ANIVERSARIANTES DO MÊS</h3>
       <button class="btn btn-green list-toggle" id="birthday-toggle" type="button" aria-expanded="false" aria-controls="birthday-panel">ANIVERSARIANTE DO MÊS? COLOQUE SEU NOME NA LISTA</button>
@@ -49,35 +68,24 @@
         </form>
       </div>
     </article>
-    <article class="list-card list-card-off" id="off-card" hidden>
-      <h3 class="eyebrow" id="off-heading">LISTA OFF</h3>
-      <button class="btn btn-outline list-toggle" id="off-toggle" type="button" aria-expanded="false" aria-controls="off-panel">ABRIR LISTA OFF</button>
-      <div class="list-panel" id="off-panel" hidden>
-        <p id="off-availability" role="status"></p>
-        <form id="off-form" aria-labelledby="off-heading" hidden>
-          <fieldset>
-            <label id="off-choice">Lista<select name="listId" required></select></label>
-            <div class="off-event">
-              <p class="off-event-title" id="off-event-name"></p>
-              <p id="off-event-start"></p>
-              <p id="off-description"></p>
-              <p id="off-entry"></p>
-            </div>
-            <label>Nome completo<input name="name" autocomplete="name" maxlength="120" required/></label>
-            <label id="off-whatsapp">WhatsApp<input name="whatsapp" type="tel" autocomplete="tel" maxlength="26"/></label>
-            <label id="off-code" hidden>Código de convite<input name="code" type="password" autocomplete="off" maxlength="150"/></label>
-            <div class="list-trap" aria-hidden="true"><label>Site<input name="website" tabindex="-1" autocomplete="off"/></label></div>
-            <p class="list-privacy">A Duke Haus é responsável pelos dados coletados para validar, organizar e conferir as inscrições e a entrada no evento. Os dados são guardados de forma privada no Google Planilhas via Google Apps Script pelo tempo necessário para administrar a lista e atender solicitações relacionadas. Para solicitar acesso, correção ou exclusão dos seus dados, fale com a <a href="https://wa.me/5538991047305" target="_blank" rel="noopener noreferrer">Duke Haus pelo WhatsApp</a>.</p>
-            <label class="list-check"><input name="privacyAccepted" type="checkbox" required/> Li o aviso de privacidade desta lista.</label>
-            <button class="btn btn-green list-submit" type="submit">ENVIAR MEU NOME</button>
-          </fieldset>
-          <p class="list-feedback" role="status" aria-live="polite" tabindex="-1"></p>
-        </form>
-      </div>
-    </article>
     <button class="btn btn-outline" id="lists-retry" type="button" hidden>TENTAR NOVAMENTE</button>
     <noscript><p>Ative o JavaScript para acessar as listas.</p></noscript>
   </div>
+</section>
+<section class="hero"><div aria-hidden="true" class="hero-symbol">✳</div><div class="wrap hero-inner"><div class="eyebrow reveal">MONTES CLAROS · MINAS GERAIS</div><h1 class="reveal">DUAS<br/>NOITES.<span class="light">SEM REGRAS.</span></h1><p class="hero-sub reveal">Confira as próximas festas e encontre a sua noite na Duke Haus.</p><div class="hero-cta reveal"><a class="btn btn-green" href="#programacao">CONHEÇA AS FESTAS ↓</a><a class="btn btn-outline" href="https://projetoblippy.vercel.app/organizador/duke-haus" rel="noopener noreferrer" target="_blank">COMPRAR INGRESSO</a></div><div class="hero-meta" id="hero-events" hidden></div></div></section>
+<div aria-hidden="true" class="runway"><div class="runway-track"><span>DUKE HAUS <em>✳</em> A NOITE É DE QUEM VIVE <em>✳</em> DUKE HAUS <em>✳</em> A NOITE É DE QUEM VIVE <em>✳</em></span><span>DUKE HAUS <em>✳</em> A NOITE É DE QUEM VIVE <em>✳</em> DUKE HAUS <em>✳</em> A NOITE É DE QUEM VIVE <em>✳</em></span></div></div>
+<section class="program wrap" id="programacao" aria-labelledby="program-title">
+  <div class="section-head reveal">
+    <div><div class="eyebrow">AGENDA</div><h2 id="program-title">SEU FINAL<br/><span>DE SEMANA.</span></h2></div>
+    <p>Confira os flyers oficiais e garanta seu ingresso.</p>
+  </div>
+  <div class="carousel-controls" id="event-controls" hidden>
+    <button class="btn btn-outline" id="prev-event" type="button" aria-label="Eventos anteriores" aria-controls="events">←</button>
+    <button class="btn btn-outline" id="next-event" type="button" aria-label="Próximos eventos" aria-controls="events">→</button>
+  </div>
+  <div class="events" id="events" aria-label="Carrossel de próximos eventos"></div>
+  <p class="fineprint" id="event-status" role="status"></p>
+  <noscript><p class="fineprint">Consulte a <a href="https://projetoblippy.vercel.app/organizador/duke-haus">programação na Blipy</a>.</p></noscript>
 </section>
 <section class="ticket-section" id="ingressos"><div class="wrap"><div class="eyebrow">DUKE HAUS / INGRESSOS</div><h2>SEM<br/>COMPLICAÇÃO.</h2><p>Garanta seu ingresso na nova página da Duke Haus na Blipy.</p><div class="hero-cta"><a class="btn" href="https://projetoblippy.vercel.app/organizador/duke-haus" rel="noopener noreferrer" target="_blank">COMPRAR INGRESSO</a></div></div></section></main>
 <footer class="footer wrap"><div class="footer-row"><a aria-label="Duke Haus" class="brand" href="#inicio"><span class="brand-mark" aria-hidden="true"></span></a><div class="footer-nav"><a href="#programacao">PROGRAMAÇÃO</a><a href="#ingressos">INGRESSOS</a><a class="nav-lists" href="#listas">LISTAS</a><a href="https://instagram.com/dukehaus" rel="noopener noreferrer" target="_blank">INSTAGRAM ↗</a><a href="https://wa.me/5538991047305" rel="noopener noreferrer" target="_blank">WHATSAPP ↗</a></div></div><div class="copyright">© DUKE HAUS · MONTES CLAROS, MG · A NOITE É DE QUEM VIVE.</div></footer><a aria-label="WhatsApp da Duke Haus" class="floating-wa" href="https://wa.me/5538991047305" rel="noopener noreferrer" target="_blank"><span class="whatsapp-mark" aria-hidden="true"></span></a>
